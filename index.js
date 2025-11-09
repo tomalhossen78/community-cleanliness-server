@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = 3000
 
@@ -22,6 +22,45 @@ async function run() {
     await client.connect();
     await client.db("admin").command({ ping: 1 });
     console.log("✅Pinged your deployment. You successfully connected to MongoDB!");
+
+    const cleanlinessDB = client.db('cleanlinessDB');
+    const issuesCollections = cleanlinessDB.collection('issuesCollections');
+
+
+    app.post('/issues',async(req,res)=>{
+        const data = req.body;
+        const result = await issuesCollections.insertOne(data)
+        res.send(result)
+    })
+    app.get('/issues',async(req,res)=>{
+        const result = await issuesCollections.find().toArray();
+        res.send(result);
+    })
+
+    app.get(`/issues`,async(req,res)=>{
+         const email = req.query.email;
+    const result = await issuesCollections.find({email_by : email}).toArray()
+        res.send(result);
+    })
+
+    app.patch('/issues/:id',async(req,res)=>{
+        const id = req.params.id;
+        const updateIssues = req.body;
+        const query = {_id : new ObjectId(id)};
+        const update = {
+            $set:{
+                Status : updateIssues.Status,
+            }
+        }
+        const result = await issuesCollections.updateOne(query,update);
+        res.send(result);
+    })
+    app.delete('/issues/:id',async(req,res)=>{
+        const id = req.params.id;
+        const query = {_id : new ObjectId(id)};
+        const result = await issuesCollections.deleteOne(query);
+        res.send(result);
+    })
   } finally {
     // await client.close();
   }
