@@ -44,6 +44,11 @@ async function run() {
       const result = await myContributionsCollections.find({email : email}).toArray()
       res.send(result);
     })
+    app.get('/my-issues',async(req,res)=>{
+      const email = req.query.email;
+      const result = await issuesCollections.find({email : email}).toArray()
+      res.send(result);
+    })
     app.get('/issues',async(req,res)=>{
         const result = await issuesCollections.find().sort({date : -1}).toArray();
         res.send(result);
@@ -82,6 +87,17 @@ async function run() {
         const query = {_id : new ObjectId(id)};
         const result = await issuesCollections.deleteOne(query);
         res.send(result);
+    })
+
+    app.patch('/issues/:id',async(req,res)=>{
+      const id = req.params.id;
+      const query = {_id : new ObjectId(id)};
+      const updateIssues = req.body;
+      const update = {
+        $set : update
+      }
+      const result = await issuesCollections.updateOne(query,update);
+      res.send(result)
     })
   } finally {
     // await client.close();
