@@ -116,6 +116,14 @@ async function run() {
       res.send(result);
     })
 
+  app.get("/community-stats", async (req, res) => {
+  const totalUsers = await usersCollection.countDocuments();
+  const resolvedIssues = await issuesCollections.countDocuments({ status: "solved" });
+  const pendingIssues = await issuesCollections.countDocuments({ status: "ongoing" });
+
+  res.send({totalUsers, resolvedIssues, pendingIssues });
+});
+
      } finally {
     // await client.close();
   }
