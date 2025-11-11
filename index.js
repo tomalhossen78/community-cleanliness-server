@@ -50,6 +50,11 @@ async function run() {
       const result = await myContributionsCollections.find({email : email}).toArray()
       res.send(result);
     })
+    app.get('/my-contributions/:issueId',async(req,res)=>{
+      const issueId = req.params.issueId;
+      const result = await myContributionsCollections.find({issueId : issueId}).toArray()
+      res.send(result);
+    })
     app.get('/my-issues',async(req,res)=>{
       const email = req.query.email;
       const result = await issuesCollections.find({email : email}).toArray()
@@ -120,7 +125,6 @@ async function run() {
   const totalUsers = await usersCollection.countDocuments();
   const resolvedIssues = await issuesCollections.countDocuments({ status: "solved" });
   const pendingIssues = await issuesCollections.countDocuments({ status: "ongoing" });
-
   res.send({totalUsers, resolvedIssues, pendingIssues });
 });
 
