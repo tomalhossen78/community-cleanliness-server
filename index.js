@@ -5,6 +5,11 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = 3000
 
+
+// middleware
+app.use(cors());
+app.use(express.json())
+
 // mongo db
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vybtxro.mongodb.net/?appName=Cluster0`;
@@ -26,6 +31,7 @@ async function run() {
     const cleanlinessDB = client.db('cleanlinessDB');
     const issuesCollections = cleanlinessDB.collection('issuesCollections');
     const myContributionsCollections = cleanlinessDB.collection('myContributionsCollections')
+    const usersCollection = cleanlinessDB.collection('usersCollection')
 
 
     app.post('/issues',async(req,res)=>{
@@ -76,7 +82,14 @@ async function run() {
         const query = {_id : new ObjectId(id)};
         const update = {
             $set:{
-                Status : updateIssues.Status,
+                title : updateIssues.title,
+                amount : updateIssues.amount,
+                cat : updateIssues.cat,
+                image : updateIssues.image,
+                location : updateIssues.location,
+                status : updateIssues.status,
+                email : updateIssues.email,
+                description : updateIssues.description,
             }
         }
         const result = await issuesCollections.updateOne(query,update);
@@ -89,26 +102,23 @@ async function run() {
         res.send(result);
     })
 
-    app.patch('/issues/:id',async(req,res)=>{
-      const id = req.params.id;
-      const query = {_id : new ObjectId(id)};
-      const updateIssues = req.body;
-      const update = {
-        $set : update
-      }
-      const result = await issuesCollections.updateOne(query,update);
-      res.send(result)
+    app.post('/users',async(req,res)=>{
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
     })
-  } finally {
+    app.get('/users',async(req,res)=>{
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    })
+
+     } finally {
     // await client.close();
   }
 }
 run().catch(console.dir);
 
 
-// middleware
-app.use(cors());
-app.use(express.json())
 
 app.get('/', (req, res) => {
   res.send('Hello World , How are all today!')
