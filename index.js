@@ -21,7 +21,7 @@ app.use(express.json())
 const firebaseTokenVerify = async(req,res,next) =>{
   const  authorization = req.headers.authorization;
     if(!authorization){
-        res.status(401).send({message : 'unauthorized access'})
+       return res.status(401).send({message : 'unauthorized access'})
       }
       const token = authorization.split(' ')[1]
       try{
@@ -29,7 +29,7 @@ const firebaseTokenVerify = async(req,res,next) =>{
         next()
       }
       catch(err){
-            res.status(401).send({message : 'unauthorized access'})
+          return  res.status(401).send({message : 'unauthorized access'})
         }
 }
 
@@ -47,9 +47,9 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
-    console.log("✅Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.connect();
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("✅Pinged your deployment. You successfully connected to MongoDB!");
 
     const cleanlinessDB = client.db('cleanlinessDB');
     const issuesCollections = cleanlinessDB.collection('issuesCollections');
@@ -83,10 +83,18 @@ async function run() {
       const result = await issuesCollections.find({email : email}).toArray()
       res.send(result);
     })
-    app.get('/issues',async(req,res)=>{
-        const result = await issuesCollections.find().sort({date : -1}).toArray();
-        res.send(result);
-    })
+   app.get('/issues', async (req, res) => {
+  const email = req.query.email;
+  let query = {};
+
+  if (email) {
+    query = { email_by: email };
+  }
+
+  const result = await issuesCollections.find(query).sort({ date: -1 }).toArray();
+  res.send(result);
+});
+
     app.get('/issues/:id',async(req,res)=>{
       const id = req.params.id;
         const result = await issuesCollections.findOne({_id : new ObjectId(id)});
@@ -96,12 +104,6 @@ async function run() {
     app.get('/recent-complaints',async(req,res)=>{
       const result = await issuesCollections.find().sort({date : -1}).limit(6).toArray();
       res.send(result);
-    })
-
-    app.get(`/issues`,async(req,res)=>{
-         const email = req.query.email;
-    const result = await issuesCollections.find({email_by : email}).toArray()
-        res.send(result);
     })
 
     app.patch('/issues/:id',async(req,res)=>{
