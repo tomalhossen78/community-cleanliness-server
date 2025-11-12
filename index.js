@@ -1,14 +1,37 @@
 const express = require('express')
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId, Admin } = require('mongodb');
 const app = express()
 const port = 3000
 
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./firebase-admin-key.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 // middleware
 app.use(cors());
 app.use(express.json())
+
+
+const firebaseTokenVerify = async(req,res,next) =>{
+  const  authorization = req.headers.authorization;
+    if(!authorization){
+        res.status(401).send({message : 'unauthorized access'})
+      }
+      const token = authorization.split(' ')[1]
+      try{
+        await admin.auth().verifyIdToken(token)
+        next()
+      }
+      catch(err){
+            res.status(401).send({message : 'unauthorized access'})
+        }
+}
 
 // mongo db
 
@@ -55,7 +78,7 @@ async function run() {
       const result = await myContributionsCollections.find({issueId : issueId}).toArray()
       res.send(result);
     })
-    app.get('/my-issues',async(req,res)=>{
+    app.get('/my-issues',firebaseTokenVerify,async(req,res)=>{
       const email = req.query.email;
       const result = await issuesCollections.find({email : email}).toArray()
       res.send(result);
@@ -71,7 +94,7 @@ async function run() {
     })
 
     app.get('/recent-complaints',async(req,res)=>{
-      const result = await issuesCollections.find().sort({date : -1}).limit(4).toArray();
+      const result = await issuesCollections.find().sort({date : -1}).limit(6).toArray();
       res.send(result);
     })
 
