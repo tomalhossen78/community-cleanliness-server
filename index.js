@@ -55,6 +55,7 @@ async function run() {
     const issuesCollections = cleanlinessDB.collection('issuesCollections');
     const myContributionsCollections = cleanlinessDB.collection('myContributionsCollections')
     const usersCollection = cleanlinessDB.collection('usersCollection')
+    const categoryCollections = cleanlinessDB.collection('categoryCollections');
 
 
     app.post('/issues',async(req,res)=>{
@@ -152,6 +153,11 @@ async function run() {
   const pendingIssues = await issuesCollections.countDocuments({ status: "ongoing" });
   res.send({totalUsers, resolvedIssues, pendingIssues });
 });
+
+app.get('/category-collections',async(req,res)=>{
+  const result =await categoryCollections.find().toArray()
+  res.send(result);
+})
 
      } finally {
     // await client.close();
